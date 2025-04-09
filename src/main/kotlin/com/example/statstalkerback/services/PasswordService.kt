@@ -12,7 +12,4 @@ class PasswordService{
         return passwordEncoder.encode(password)
     }
 
-    fun checkPassword(rawPassword: String, hashedPassword: String): Boolean{
-        return passwordEncoder.matches(rawPassword, hashedPassword)
-    }
 }

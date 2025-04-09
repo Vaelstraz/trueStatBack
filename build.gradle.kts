@@ -32,6 +32,11 @@ dependencies {
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.springframework.boot:spring-boot-starter-security")
 
+    //Ajout des dépendances pour JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
 }
 
 tasks.withType<KotlinCompile> {

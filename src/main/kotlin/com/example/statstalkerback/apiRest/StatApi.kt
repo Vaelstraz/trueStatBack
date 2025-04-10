@@ -6,12 +6,10 @@ import com.example.statstalkerback.model.User
 import com.example.statstalkerback.services.JwtService
 import com.example.statstalkerback.services.PasswordService
 import com.example.statstalkerback.services.UserService
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 
 @RestController
@@ -77,26 +75,33 @@ class StatStalkerAPI(
     }
 
 
+    @DeleteMapping("/users/{pseudo}")
+    fun deleteUser(
+        @PathVariable pseudo: String,
+        request: HttpServletRequest
+    ): ResponseEntity<String> {
+        val authHeader = request.getHeader("Authorization")
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token manquant")
 
-    @PostMapping("/delete")
-    fun deleteUser(@RequestBody deleteBean: DeleteBean): ResponseEntity<String> {
-        println("Reçu suppression pour: ${deleteBean.pseudo}")
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Format du token invalide")
+        }
 
+        val token = authHeader.substring(7)
+        val tokenPseudo = jwtService.extractUsername(token)
 
+        if (tokenPseudo != pseudo) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Ce n'est pas votre compte")
+        }
 
-        return if (userService.deleteUser(deleteBean)) {
+        val deleted = userService.deleteByPseudo(pseudo)
+
+        return if (deleted) {
             ResponseEntity.ok("Utilisateur supprimé")
         } else {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Pseudo ou mot de passe incorrect")
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé")
         }
     }
-// Un test rapide
-    @PostMapping("/test")
-    fun test(@RequestBody message: String ): ResponseEntity<String>{
-        println("C'est la fête")
-        return ResponseEntity.ok("C'est la fête 2")
-    }
-
 
 }
 

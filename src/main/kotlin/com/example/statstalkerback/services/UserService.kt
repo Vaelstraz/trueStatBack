@@ -1,8 +1,7 @@
 package com.example.statstalkerback.services
 
-import com.example.statstalkerback.bean.DeleteBean
-import com.example.statstalkerback.model.User
 //import com.example.statstalkerback.model.UserCredentials
+import com.example.statstalkerback.model.User
 import com.example.statstalkerback.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -30,13 +29,13 @@ class UserService @Autowired constructor(
         }
     }
     //Supprime l'utilisateur
-    fun deleteUser(deleteBean: DeleteBean): Boolean {
-        val user = userRepository.findByPseudo(deleteBean.pseudo)
-        if (user != null && passwordEncoder.matches(deleteBean.password, user.password)) {
+    fun deleteByPseudo(pseudo: String): Boolean {
+        val user = userRepository.findByPseudo(pseudo)
+        return if (user != null) {
             userRepository.delete(user)
-            return true
+            true
+        } else {
+            false
         }
-        return false
     }
-
 }

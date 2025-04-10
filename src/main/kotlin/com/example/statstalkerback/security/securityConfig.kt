@@ -13,7 +13,7 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/statstalker/signup", "/statstalker/login","/statstalker/delete", "statstalker/test").permitAll() // Autoriser l'inscription sans authentification
+                auth.requestMatchers("/statstalker/signup", "/statstalker/login","/statstalker/delete", "statstalker/users/{pseudo}","/statstalker/me").permitAll() // Autoriser l'inscription sans authentification
                     .anyRequest().authenticated()
             }
             .csrf { it.disable() } // Nouvelle façon de désactiver CSRF

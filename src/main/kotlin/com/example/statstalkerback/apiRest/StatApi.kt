@@ -1,6 +1,5 @@
 package com.example.statstalkerback.apiRest
 
-import com.example.statstalkerback.bean.DeleteBean
 import com.example.statstalkerback.bean.LoginBean
 import com.example.statstalkerback.model.User
 import com.example.statstalkerback.services.JwtService
@@ -9,6 +8,7 @@ import com.example.statstalkerback.services.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 
 
@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.*
 class StatStalkerAPI(
     private val userService: UserService,
     private val passwordService: PasswordService,
-    private val jwtService: JwtService
+    private val jwtService: JwtService,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     @PostMapping("/signup")
@@ -102,6 +103,48 @@ class StatStalkerAPI(
             ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé")
         }
     }
+
+    @GetMapping("/me")
+    fun getUserInfoFromToken(request: HttpServletRequest): ResponseEntity<User> {
+        val authHeader = request.getHeader("Authorization") ?: return ResponseEntity.status(401).build()
+        if (!authHeader.startsWith("Bearer ")) return ResponseEntity.status(401).build()
+
+        val token = authHeader.substring(7)
+        val pseudo = jwtService.extractUsername(token)
+
+        val user = userService.getUserByPseudo(pseudo) ?: return ResponseEntity.status(404).build()
+        return ResponseEntity.ok(user)
+    }
+
+
+    @PutMapping("/users/{pseudo}")
+    fun updateUser(
+        @PathVariable pseudo: String,
+        @RequestBody updatedUser: User,
+        request: HttpServletRequest
+    ): ResponseEntity<String> {
+        val authHeader = request.getHeader("Authorization") ?: return ResponseEntity.status(401).body("Token manquant")
+        if (!authHeader.startsWith("Bearer ")) return ResponseEntity.status(401).body("Format du token invalide")
+
+        val token = authHeader.substring(7)
+        val tokenPseudo = jwtService.extractUsername(token)
+
+        if (tokenPseudo != pseudo) {
+            return ResponseEntity.status(403).body("Ce n'est pas votre compte")
+        }
+
+        val existingUser = userService.getUserByPseudo(pseudo)
+            ?: return ResponseEntity.status(404).body("Utilisateur non trouvé")
+
+        val userToSave = existingUser.copy(
+            pseudo = updatedUser.pseudo,
+            password = passwordEncoder.encode(updatedUser.password)
+        )
+
+        userService.saveUser(userToSave)
+        return ResponseEntity.ok("Utilisateur mis à jour")
+    }
+
 
 }
 

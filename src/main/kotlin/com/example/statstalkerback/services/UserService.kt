@@ -38,4 +38,8 @@ class UserService @Autowired constructor(
             false
         }
     }
+
+    fun getUserByPseudo(pseudo: String): User? {
+        return userRepository.findByPseudo(pseudo)
+    }
 }
